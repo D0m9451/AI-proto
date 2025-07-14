@@ -1,0 +1,4 @@
+run "pip freeze > requirements.txt" to update txt file with dependancies list
+just run "pip install -r requirements.txt" to install necessary dependancies from list
+
+run Vinny.py to start
