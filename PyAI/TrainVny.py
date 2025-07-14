@@ -1,43 +1,64 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
 from datasets import load_dataset
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+import torch
 
-model_path = "./models/Qwen2.5-3B"
-model = AutoModelForCausalLM.from_pretrained(model_path)
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-
-dataset = load_dataset(
-    "json",
-    data_files={"train": r"C:\Users\Domin\Downloads\Programminn\repo\AI-proto\trainingData\revision_techniques.jsonl"},
+# Load model & tokenizer
+model_name = "./models/Qwen2.5-3B"
+tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    device_map="auto",
+    load_in_4bit=True  # memory efficient
 )
 
-def preprocess_function(examples):
-    full_texts = [p + c for p, c in zip(examples["prompt"], examples["completion"])]
-    tokenized = tokenizer(full_texts, truncation=True, padding="max_length", max_length=512)
-    labels = []
-    for i, (prompt_text, _) in enumerate(zip(examples["prompt"], examples["completion"])):
-        prompt_len = len(tokenizer(prompt_text)["input_ids"])
-        label_ids = tokenized["input_ids"][i].copy()
-        label_ids[:prompt_len] = [-100] * prompt_len
-        labels.append(label_ids)
-    tokenized["labels"] = labels
-    return tokenized
+# Prepare model for LoRA
+model = prepare_model_for_kbit_training(model)
 
-tokenized_datasets = dataset.map(preprocess_function, batched=True, remove_columns=["prompt", "completion"])
+lora_config = LoraConfig(
+    r=8,
+    lora_alpha=16,
+    target_modules=["q_proj", "v_proj"],  # or adjust for Qwen specifics if needed
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM"
+)
 
+model = get_peft_model(model, lora_config)
+
+# Load your dataset
+dataset = load_dataset("json", data_files={"train": r"C:\Users\Domin\Downloads\Programminn\repo\AI-proto\trainingData\vinny_personality.jsonl"})
+
+# Tokenize prompt-completion pairs
+def format_and_tokenize(example):
+    text = example["prompt"] + example["completion"]
+    return tokenizer(text, truncation=True, padding="max_length", max_length=512)
+
+tokenized_dataset = dataset.map(format_and_tokenize, batched=False)
+
+# Training arguments
 training_args = TrainingArguments(
-    output_dir="./results",
-    num_train_epochs=3,
+    output_dir="./vinny-lora-results",
     per_device_train_batch_size=2,
-    save_steps=500,
+    num_train_epochs=3,
+    save_steps=10,
     save_total_limit=2,
-    logging_steps=100,
-    report_to="none",
+    logging_steps=5,
+    learning_rate=2e-4,
+    fp16=True,
+    report_to="none"
 )
 
+# Trainer setup
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_datasets["train"],
+    train_dataset=tokenized_dataset["train"]
 )
 
+# Train model
 trainer.train()
+
+# Save LoRA adapter weights
+model.save_pretrained("./vinny-lora-adapter")
+tokenizer.save_pretrained("./vinny-lora-adapter")
