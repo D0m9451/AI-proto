@@ -1,4 +1,12 @@
 run "pip freeze > requirements.txt" to update txt file with dependancies list
 just run "pip install -r requirements.txt" to install necessary dependancies from list
 
+
+for venv:
+    python -m venv venv
+    check with, python --version
+    .\venv\Scripts\Activate.ps1
+    if that no work then run, Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+
 run Vinny.py to start

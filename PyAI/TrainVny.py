@@ -27,7 +27,7 @@ lora_config = LoraConfig(
 model = get_peft_model(model, lora_config)
 
 # Load your dataset
-dataset = load_dataset("json", data_files={"train": r"C:\Users\Domin\Downloads\Programminn\repo\AI-proto\trainingData\vinny_personality.jsonl"})
+dataset = load_dataset("json", data_files={"train": r"C:\Users\Domin\Downloads\ComputerScience\Programs\AI-proto\trainingData\vinny_personality.jsonl"})
 
 # Tokenize prompt-completion pairs
 def format_and_tokenize(example):
