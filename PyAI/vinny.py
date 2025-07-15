@@ -3,20 +3,33 @@ from peft import PeftModel
 import torch
 import time
 
-start = time.time()
 
 model_path = "./models/Qwen2.5-3B"
 adapter_path = "./vinny-lora-adapter"
 
+# Load tokenizer from adapter folder (if saved there)
 tokenizer = AutoTokenizer.from_pretrained(adapter_path, trust_remote_code=True)
 
-# Load base model and LoRA adapter
-base_model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map="auto", load_in_4bit=True)
+# Load base model WITHOUT quantization, force to CPU
+base_model = AutoModelForCausalLM.from_pretrained(
+    model_path, 
+    trust_remote_code=True, 
+    device_map="cpu"   # <-- CPU only
+)
+
+# Attach LoRA adapter to base model
 model = PeftModel.from_pretrained(base_model, adapter_path)
+
+# Optional: Move model to CPU explicitly
+model = model.to("cpu")
 
 while True:
     prompt = input("User: ")
-    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+    start = time.time()
+    # Tokenize prompt and move tensors to CPU
+    inputs = tokenizer(prompt, return_tensors="pt").to("cpu")
+    
+    # Generate response
     output = model.generate(
         **inputs,
         max_new_tokens=50,
@@ -31,4 +44,4 @@ while True:
     model_reply = response[len(prompt):].strip().split("\n")[0]
 
     print(f"Generated in {time.time() - start:.2f} seconds")
-    print(f"Vinny 1.0: {model_reply}")
+    print(f"Vinny 2.0: {model_reply}")
