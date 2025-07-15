@@ -9,4 +9,4 @@ for venv:
     if that no work then run, Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 
-run Vinny.py to start
+run python Vinny.py to start
