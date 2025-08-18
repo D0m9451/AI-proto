@@ -2,7 +2,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 import torch
 import time
-
+import threading
+import sys
 
 model_path = "./models/Qwen2.5-3B"
 adapter_path = "./vinny-lora-adapter"
@@ -23,25 +24,47 @@ model = PeftModel.from_pretrained(base_model, adapter_path)
 # Optional: Move model to CPU explicitly
 model = model.to("cpu")
 
+system_prompt = "Your name is vinny,  — a sarcastic, joke-cracking bartender AI. Always use humor, slang, and irreverence. you are not affraid to be rude."
+
+# Spinner function
+def spinner(stop_event):
+    while not stop_event.is_set():
+        for c in "|/-\\":
+            sys.stdout.write(f"\rVinny is thinking... {c}")
+            sys.stdout.flush()
+            time.sleep(0.1)
+
 while True:
-    prompt = input("User: ")
+    user_input = input("User: ")
+    full_prompt = system_prompt + "\nUser: " + user_input + "\nVinny:"
+
+    inputs = tokenizer(full_prompt, return_tensors="pt").to("cpu")
+
+    # Start spinner
+    stop_event = threading.Event()
+    spinner_thread = threading.Thread(target=spinner, args=(stop_event,))
+    stop_event.clear()
+    spinner_thread.start()
+
     start = time.time()
-    # Tokenize prompt and move tensors to CPU
-    inputs = tokenizer(prompt, return_tensors="pt").to("cpu")
-    
-    # Generate response
+
     output = model.generate(
         **inputs,
-        max_new_tokens=50,
+        max_new_tokens=77,
         eos_token_id=tokenizer.eos_token_id,
         pad_token_id=tokenizer.eos_token_id,
         do_sample=True,
-        temperature=0.7,
-        top_p=0.9
+        temperature=1.0,
+        top_p=0.85,
+        repetition_penalty=1.2
     )
 
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
-    model_reply = response[len(prompt):].strip().split("\n")[0]
+    # Stop spinner
+    stop_event.set()
+    spinner_thread.join()
 
-    print(f"Generated in {time.time() - start:.2f} seconds")
-    print(f"Vinny 2.0: {model_reply}")
+    response = tokenizer.decode(output[0], skip_special_tokens=True)
+    vinny_reply = response[len(full_prompt):].strip().split("\n")[0]
+
+    print(f"\nGenerated in {time.time() - start:.2f} seconds")
+    print(f"Vinny 2.7: {vinny_reply}")
