@@ -10,3 +10,7 @@ for venv:
 
 
 run python Vinny.py to start
+
+
+Through CMD:
+	venv\Scripts\activate
