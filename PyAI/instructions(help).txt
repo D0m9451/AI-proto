@@ -8,6 +8,9 @@ for venv:
     .\venv\Scripts\Activate.ps1
     if that no work then run, Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
+CMD:
+venv\Scripts\activate
+
 
 run python Vinny.py to start
 
