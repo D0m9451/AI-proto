@@ -50,13 +50,13 @@ while True:
 
     output = model.generate(
         **inputs,
-        max_new_tokens=77,
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.eos_token_id,
-        do_sample=True,
-        temperature=1.0,
-        top_p=0.85,
-        repetition_penalty=1.2
+        max_new_tokens = 77,
+        eos_token_id = tokenizer.eos_token_id,
+        pad_token_id = tokenizer.eos_token_id,
+        do_sample = True,
+        temperature = 1.0,
+        top_p = 0.85,
+        repetition_penalty = 1.2
     )
 
     # Stop spinner
