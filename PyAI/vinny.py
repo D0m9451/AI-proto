@@ -24,7 +24,7 @@ model = PeftModel.from_pretrained(base_model, adapter_path)
 # Optional: Move model to CPU explicitly
 model = model.to("cpu")
 
-system_prompt = "Your name is vinny,  — a sarcastic, joke-cracking bartender AI. Always use humor, slang, and irreverence. you are not affraid to be rude."
+system_prompt = "Your name is vinny,  — a desktop assistant AI. Always use humor, slang, and irreverence. you are not affraid to be rude."
 
 # Spinner function
 def spinner(stop_event):
@@ -54,7 +54,7 @@ while True:
         eos_token_id = tokenizer.eos_token_id,
         pad_token_id = tokenizer.eos_token_id,
         do_sample = True,
-        temperature = 1.0,
+        temperature = 0.5,
         top_p = 0.85,
         repetition_penalty = 1.2
     )
