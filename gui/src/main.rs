@@ -12,6 +12,10 @@ enum AppState {
 enum Theme {
     Light,
     Dark,
+    Blue,
+    Forest,
+    Cherry
+
 }
 
 struct VinnyApp {
@@ -33,7 +37,47 @@ impl App for VinnyApp {
 
         match self.theme {
             Theme::Light => ctx.set_visuals(egui::Visuals::light()),
+
             Theme::Dark => ctx.set_visuals(egui::Visuals::dark()),
+
+            Theme::Blue => {
+                let mut visuals = egui::Visuals::dark();
+                visuals.window_fill = egui::Color32::from_rgb(10, 25, 50);          // Color 1
+                visuals.panel_fill = egui::Color32::from_rgb(20, 50, 90);           // Color 2
+                visuals.override_text_color = Some(egui::Color32::from_rgb(240, 245, 250)); // Color 6
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 140, 90);     // Color 4
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(255, 180, 120);   // Color 5
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(40, 80, 130);    // Color 3
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(20, 35, 60); // Color 10
+                ctx.set_visuals(visuals);
+            }
+
+            Theme::Forest => {
+                let mut visuals = egui::Visuals::dark();
+                visuals.window_fill = egui::Color32::from_rgb(34, 49, 32);          // Color 1
+                visuals.panel_fill = egui::Color32::from_rgb(50, 70, 45);           // Color 2
+                visuals.override_text_color = Some(egui::Color32::from_rgb(201, 184, 143)); // Color 6
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(112, 142, 90);     // Color 4
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(153, 125, 90);    // Color 5
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(71, 101, 57);    // Color 3
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(45, 60, 40); // Color 10
+                ctx.set_visuals(visuals);
+
+            }
+
+            Theme::Cherry => {
+                let mut visuals = egui::Visuals::light();
+                visuals.window_fill = egui::Color32::from_rgb(255, 240, 245);         // Color 1
+                visuals.panel_fill = egui::Color32::from_rgb(255, 210, 220);          // Color 2
+                visuals.override_text_color = Some(egui::Color32::from_rgb(231, 84, 128)); // Color 8
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 120, 150);     // Color 4
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(255, 160, 180);    // Color 5
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(255, 180, 200);   // Color 3
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(150, 100, 110); // Color 10
+                ctx.set_visuals(visuals);
+
+
+            }
         }
 
         match self.state {
@@ -93,6 +137,15 @@ impl VinnyApp {
                 }
                 if ui.button("Dark").clicked() {
                     self.theme = Theme::Dark;
+                }
+                if ui.button("Blue").clicked() {
+                    self.theme = Theme::Blue;
+                }
+                if ui.button("Forest").clicked() {
+                    self.theme = Theme::Forest;
+                }
+                if ui.button("Cherry").clicked() {
+                    self.theme = Theme::Cherry;
                 }
             });
 
