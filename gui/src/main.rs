@@ -1,5 +1,4 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
-//#![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
 use eframe::{egui, App, Frame, NativeOptions};
 
@@ -8,6 +7,7 @@ enum AppState {
     MainMenu,
     Chat,
     Settings,
+    ModelInfo,
 }
 enum Theme {
     Light,
@@ -84,6 +84,8 @@ impl App for VinnyApp {
             AppState::MainMenu => self.show_main_menu(ctx),
             AppState::Chat => self.show_chat(ctx),
             AppState::Settings => self.show_settings(ctx),
+            AppState::ModelInfo => self.show_model_info(ctx),
+
         }
     }
 }
@@ -91,12 +93,10 @@ impl App for VinnyApp {
 impl VinnyApp {
     fn show_main_menu(&mut self, ctx: &egui::Context) {
     egui::CentralPanel::default().show(ctx, |ui| {
-        // Center everything horizontally
         ui.vertical_centered(|ui| {
             ui.heading("Vinny the AI assistant");
-            ui.add_space(30.0); // add spacing below heading
+            ui.add_space(30.0); 
 
-            // Put the buttons in a vertical column
             if ui.button("Start Chat").clicked() {
                 self.state = AppState::Chat;
             }
@@ -104,6 +104,11 @@ impl VinnyApp {
 
             if ui.button("Settings").clicked() {
                 self.state = AppState::Settings;
+            }
+            ui.add_space(10.0);
+
+            if ui.button("Model Info").clicked() {
+                self.state = AppState::ModelInfo;
             }
             ui.add_space(10.0);
 
@@ -148,6 +153,16 @@ impl VinnyApp {
                     self.theme = Theme::Cherry;
                 }
             });
+
+            if ui.button("Back to Menu").clicked() {
+                self.state = AppState::MainMenu;
+            }
+        });
+    }
+    fn show_model_info(&mut self, ctx: &egui::Context) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("Model Info");
+            ui.label("Details about the AI model...");
 
             if ui.button("Back to Menu").clicked() {
                 self.state = AppState::MainMenu;
