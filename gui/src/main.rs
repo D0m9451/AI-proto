@@ -14,7 +14,9 @@ enum Theme {
     Dark,
     Blue,
     Forest,
-    Cherry
+    Cherry,
+    Greyscale,
+    Punk,
 
 }
 
@@ -77,6 +79,33 @@ impl App for VinnyApp {
                 ctx.set_visuals(visuals);
 
 
+            }
+
+            Theme::Greyscale => {
+                let mut visuals = egui::Visuals::light();
+                visuals.window_fill = egui::Color32::from_rgb(200, 200, 200);        // Color 1
+                visuals.panel_fill = egui::Color32::from_rgb(180, 180, 180);         // Color 2
+                visuals.override_text_color = Some(egui::Color32::from_rgb(20, 20, 20)); // Color 10
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(100, 100, 100); // Color 6
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(120, 120, 120); // Color 5
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(160, 160, 160); // Color 3
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(140, 140, 140); // Color 4
+                ctx.set_visuals(visuals);
+
+
+
+            }
+            Theme::Punk => {
+                let mut visuals = egui::Visuals::light();
+                visuals.window_fill = egui::Color32::from_rgb(0, 255, 13);                // Black background
+                visuals.panel_fill = egui::Color32::from_rgb(0, 255, 13);                // Keep panels black too
+                visuals.override_text_color = Some(egui::Color32::from_rgb(231, 84, 128)); // White text
+
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 0, 208); // Neon Pink
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(255, 0, 208); // Neon Green
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(255, 0, 208); // Hot Pink
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(255, 0, 208); // Lime Green
+                ctx.set_visuals(visuals);
             }
         }
 
@@ -151,6 +180,12 @@ impl VinnyApp {
                 }
                 if ui.button("Cherry").clicked() {
                     self.theme = Theme::Cherry;
+                }
+                if ui.button("Greyscale").clicked() {
+                    self.theme = Theme::Greyscale
+                }
+                if ui.button("Punk").clicked() {
+                    self.theme = Theme::Punk
                 }
             });
 
