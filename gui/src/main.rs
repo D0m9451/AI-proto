@@ -17,6 +17,7 @@ enum Theme {
     Cherry,
     Greyscale,
     Punk,
+    Infernus,
 
 }
 
@@ -107,6 +108,19 @@ impl App for VinnyApp {
                 visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(255, 0, 208);
                 ctx.set_visuals(visuals);
             }
+            Theme::Infernus => {
+                let mut visuals = egui::Visuals::dark();
+                visuals.window_fill = egui::Color32::from_rgb(15, 0, 0);               // Deep black-red
+                visuals.panel_fill = egui::Color32::from_rgb(40, 5, 5);                // Crimson panels
+                visuals.override_text_color = Some(egui::Color32::from_rgb(255, 220, 100)); // Ash white text
+
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(90, 10, 10);  // Ember red
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(150, 20, 20);       // Blood red
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(210, 30, 30);        // Hot crimson
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 60, 20);         // Flame orange
+                ctx.set_visuals(visuals);
+
+            }
         }
 
         match self.state {
@@ -126,22 +140,22 @@ impl VinnyApp {
             ui.heading("Vinny the AI assistant");
             ui.add_space(30.0); 
 
-            if ui.button("Start Chat").clicked() {
+            if ui.button("💬 Start chat").clicked() {
                 self.state = AppState::Chat;
             }
             ui.add_space(10.0);
 
-            if ui.button("Settings").clicked() {
+            if ui.button("⚙ Settings").clicked() {
                 self.state = AppState::Settings;
             }
             ui.add_space(10.0);
 
-            if ui.button("Model Info").clicked() {
+            if ui.button("📝 Model Info").clicked() {
                 self.state = AppState::ModelInfo;
             }
             ui.add_space(10.0);
 
-            if ui.button("Exit").clicked() {
+            if ui.button("🚪Exit").clicked() {
                 std::process::exit(0);
             }
         });
@@ -151,7 +165,7 @@ impl VinnyApp {
 
     fn show_chat(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("helo");
+            ui.heading("💬 Chat room");
             ui.label("Chat room bit");
 
             if ui.button("Back to Menu").clicked() {
@@ -187,6 +201,9 @@ impl VinnyApp {
                 if ui.button("Punk").clicked() {
                     self.theme = Theme::Punk
                 }
+                if ui.button("Infernus").clicked() {
+                    self.theme = Theme::Infernus
+                }
             });
 
             if ui.button("Back to Menu").clicked() {
@@ -196,7 +213,7 @@ impl VinnyApp {
     }
     fn show_model_info(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Model Info");
+            ui.heading("📝 Model Info");
             ui.label("This program uses the AI model Qwen2.5-3B.
 Information on this medel is desplayed below:
 
