@@ -96,15 +96,15 @@ impl App for VinnyApp {
 
             }
             Theme::Punk => {
-                let mut visuals = egui::Visuals::light();
-                visuals.window_fill = egui::Color32::from_rgb(0, 255, 13);                // Black background
-                visuals.panel_fill = egui::Color32::from_rgb(0, 255, 13);                // Keep panels black too
-                visuals.override_text_color = Some(egui::Color32::from_rgb(231, 84, 128)); // White text
+                let mut visuals = egui::Visuals::dark();
+                visuals.window_fill = egui::Color32::from_rgb(0, 255, 13);               
+                visuals.panel_fill = egui::Color32::from_rgb(125, 36, 163);  
+                visuals.override_text_color = Some(egui::Color32::from_rgb(0, 255, 13));
 
-                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 0, 208); // Neon Pink
-                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(255, 0, 208); // Neon Green
-                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(255, 0, 208); // Hot Pink
-                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(255, 0, 208); // Lime Green
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 0, 208);
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(255, 0, 208);
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(255, 0, 208);
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(255, 0, 208);
                 ctx.set_visuals(visuals);
             }
         }
@@ -197,7 +197,27 @@ impl VinnyApp {
     fn show_model_info(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Model Info");
-            ui.label("Details about the AI model...");
+            ui.label("This program uses the AI model Qwen2.5-3B.
+Information on this medel is desplayed below:
+
+	Qwen2.5 is the latest series of Qwen large language models. For Qwen2.5, we release a number of base language models and instruction-tuned language models ranging from 0.5 to 72 billion parameters. Qwen2.5 brings the following improvements upon Qwen2:
+
+		Significantly more knowledge and has greatly improved capabilities in coding and mathematics, thanks to our specialized expert models in these domains.
+		Significant improvements in instruction following, generating long texts (over 8K tokens), understanding structured data (e.g, tables), and generating structured outputs especially JSON. More resilient to the diversity of system prompts, enhancing role-play implementation and condition-setting for chatbots.
+		Long-context Support up to 128K tokens and can generate up to 8K tokens.
+		Multilingual support for over 29 languages, including Chinese, English, French, Spanish, Portuguese, German, Italian, Russian, Japanese, Korean, Vietnamese, Thai, Arabic, and more.
+
+	This program uses the base 3B Qwen2.5 model, which has the following features:
+
+		Type: Causal Language Models
+		Training Stage: Pretraining
+		Architecture: transformers with RoPE, SwiGLU, RMSNorm, Attention QKV bias and tied word embeddings
+		Number of Parameters: 3.09B
+		Number of Paramaters (Non-Embedding): 2.77B
+		Number of Layers: 36
+		Number of Attention Heads (GQA): 16 for Q and 2 for KV
+		Context Length: Full 32,768 tokens
+");
 
             if ui.button("Back to Menu").clicked() {
                 self.state = AppState::MainMenu;
