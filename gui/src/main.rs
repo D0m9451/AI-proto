@@ -17,6 +17,7 @@ enum Theme {
     Cherry,
     Greyscale,
     Punk,
+    DarkPunk,
     Infernus,
 
 }
@@ -101,7 +102,6 @@ impl App for VinnyApp {
                 visuals.window_fill = egui::Color32::from_rgb(0, 255, 13);               
                 visuals.panel_fill = egui::Color32::from_rgb(125, 36, 163);  
                 visuals.override_text_color = Some(egui::Color32::from_rgb(0, 255, 13));
-
                 visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 0, 208);
                 visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(255, 0, 208);
                 visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(255, 0, 208);
@@ -110,16 +110,26 @@ impl App for VinnyApp {
             }
             Theme::Infernus => {
                 let mut visuals = egui::Visuals::dark();
-                visuals.window_fill = egui::Color32::from_rgb(15, 0, 0);               // Deep black-red
-                visuals.panel_fill = egui::Color32::from_rgb(40, 5, 5);                // Crimson panels
-                visuals.override_text_color = Some(egui::Color32::from_rgb(255, 220, 100)); // Ash white text
-
-                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(90, 10, 10);  // Ember red
-                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(150, 20, 20);       // Blood red
-                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(210, 30, 30);        // Hot crimson
-                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 60, 20);         // Flame orange
+                visuals.window_fill = egui::Color32::from_rgb(15, 0, 0);
+                visuals.panel_fill = egui::Color32::from_rgb(40, 5, 5);
+                visuals.override_text_color = Some(egui::Color32::from_rgb(255, 220, 100));
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(90, 10, 10);
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(150, 20, 20);
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(210, 30, 30);
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 60, 20);
                 ctx.set_visuals(visuals);
 
+            }
+            Theme::DarkPunk => {
+                let mut visuals = egui::Visuals::dark();
+                visuals.window_fill = egui::Color32::from_rgb(5, 8, 41);
+                visuals.panel_fill = egui::Color32::from_rgb(5, 8, 41);
+                visuals.override_text_color = Some(egui::Color32::from_rgb(23, 232, 0));
+                visuals.widgets.active.bg_fill = egui::Color32::from_rgb(255, 0, 208);
+                visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(255, 0, 208);
+                visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(255, 0, 208);
+                visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(255, 0, 208);
+                ctx.set_visuals(visuals);
             }
         }
 
@@ -178,7 +188,7 @@ impl VinnyApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("⚙ Settings");
 
-            ui.horizontal(|ui| {
+            ui.vertical(|ui| {
                 ui.label("Theme: ");
                 if ui.button("Light").clicked() {
                     self.theme = Theme::Light;
@@ -200,6 +210,9 @@ impl VinnyApp {
                 }
                 if ui.button("Punk").clicked() {
                     self.theme = Theme::Punk
+                }
+                if ui.button("Dark Punk").clicked() {
+                    self.theme = Theme::DarkPunk
                 }
                 if ui.button("Infernus").clicked() {
                     self.theme = Theme::Infernus
