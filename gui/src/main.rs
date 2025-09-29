@@ -222,10 +222,10 @@ impl VinnyApp {
                 }
             });
             ui.horizontal_wrapped(|ui| {
-                ui.heading("GPU quantization y/n: ");
+                ui.heading("Performance: ");
 
-                if ui.checkbox(&mut gpuq,"GPU quantization:").clicked() {
-                    let mut gpuq = true;
+                if ui.checkbox(&mut gpuq, "GPU quantization:").changed() {
+                    println!("Checkbox toggled! New value: {gpuq}");
                 }
             });
 
