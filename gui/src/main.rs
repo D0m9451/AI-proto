@@ -3,6 +3,8 @@
 use eframe::{egui, App, Frame, NativeOptions};
 
 #[derive(PartialEq)]
+
+
 enum AppState {
     MainMenu,
     Chat,
@@ -185,11 +187,12 @@ impl VinnyApp {
     }
 
     fn show_settings(&mut self, ctx: &egui::Context) {
+        let mut gpuq = false;
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("⚙ Settings");
 
-            ui.vertical(|ui| {
-                ui.label("Theme: ");
+            ui.horizontal_wrapped(|ui| {
+                ui.heading("Theme: ");
                 if ui.button("Light").clicked() {
                     self.theme = Theme::Light;
                 }
@@ -216,6 +219,13 @@ impl VinnyApp {
                 }
                 if ui.button("Infernus").clicked() {
                     self.theme = Theme::Infernus
+                }
+            });
+            ui.horizontal_wrapped(|ui| {
+                ui.heading("GPU quantization y/n: ");
+
+                if ui.checkbox(&mut gpuq,"GPU quantization:").clicked() {
+                    let mut gpuq = true;
                 }
             });
 
