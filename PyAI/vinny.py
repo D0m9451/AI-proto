@@ -5,26 +5,26 @@ import time
 import threading
 import sys
 
-model_path = "./models/Qwen2.5-3B"
-adapter_path = "./vinny-lora-adapter"
+modelpath = "./models/Qwen2.5-3B"
+adapterpath = "./vinny-lora-adapter"
 
 # Load tokenizer from adapter folder (if saved there)
-tokenizer = AutoTokenizer.from_pretrained(adapter_path, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(adapterpath, trust_remote_code=True)
 
 # Load base model WITHOUT quantization, force to CPU
-base_model = AutoModelForCausalLM.from_pretrained(
-    model_path, 
+basemodel = AutoModelForCausalLM.from_pretrained(
+    modelpath, 
     trust_remote_code=True, 
     device_map="cpu"   # <-- CPU only
 )
 
 # Attach LoRA adapter to base model
-model = PeftModel.from_pretrained(base_model, adapter_path)
+model = PeftModel.from_pretrained(basemodel, adapterpath)
 
 # Optional: Move model to CPU explicitly
 model = model.to("cpu")
 
-system_prompt = "Your name is vinny,  — a desktop assistant AI. Always use humor, slang, and irreverence. you are not affraid to be rude."
+systemprompt = "Your name is vinny,  — a desktop assistant AI. Always use humor, slang, and irreverence. you are not affraid to be rude."
 
 # Spinner function
 def spinner(stop_event):
@@ -35,10 +35,10 @@ def spinner(stop_event):
             time.sleep(0.1)
 
 while True:
-    user_input = input("User: ")
-    full_prompt = system_prompt + "\nUser: " + user_input + "\nVinny:"
+    userinput = input("User: ")
+    fullprompt = systemprompt + "\nUser: " + userinput + "\nVinny:"
 
-    inputs = tokenizer(full_prompt, return_tensors="pt").to("cpu")
+    inputs = tokenizer(fullprompt, return_tensors="pt").to("cpu")
 
     # Start spinner
     stop_event = threading.Event()
@@ -64,7 +64,7 @@ while True:
     spinner_thread.join()
 
     response = tokenizer.decode(output[0], skip_special_tokens=True)
-    vinny_reply = response[len(full_prompt):].strip().split("\n")[0]
+    vinnyreply = response[len(fullprompt):].strip().split("\n")[0]
 
     print(f"\nGenerated in {time.time() - start:.2f} seconds")
-    print(f"Vinny 2.7: {vinny_reply}")
+    print(f"Vinny 2.7: {vinnyreply}")
