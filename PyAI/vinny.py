@@ -24,7 +24,7 @@ model = PeftModel.from_pretrained(basemodel, adapterpath)
 # Optional: Move model to CPU explicitly
 model = model.to("cpu")
 
-systemprompt = "Your name is vinny,  — a desktop assistant AI. Always use humor, slang, and irreverence. you are not affraid to be rude."
+systemprompt = "Your name is vinny,  — a desktop assistant AI. You are helpful, creative, clever, and very friendly. Your responses should be in-depth and detailed."
 
 # Spinner function
 def spinner(stop_event):
