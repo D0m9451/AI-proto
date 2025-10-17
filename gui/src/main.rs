@@ -147,32 +147,32 @@ impl App for VinnyApp {
 
 impl VinnyApp {
     fn show_main_menu(&mut self, ctx: &egui::Context) {
-    egui::CentralPanel::default().show(ctx, |ui| {
-        ui.vertical_centered(|ui| {
-            ui.heading("Vinny the AI assistant");
-            ui.add_space(30.0); 
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.heading("Vinny the AI assistant");
+                ui.add_space(30.0); 
 
-            if ui.button("💬 Start chat").clicked() {
-                self.state = AppState::Chat;
-            }
-            ui.add_space(10.0);
+                if ui.button("💬 Start chat").clicked() {
+                    self.state = AppState::Chat;
+                }
+                ui.add_space(10.0);
 
-            if ui.button("⚙ Settings").clicked() {
-                self.state = AppState::Settings;
-            }
-            ui.add_space(10.0);
+                if ui.button("⚙ Settings").clicked() {
+                    self.state = AppState::Settings;
+                }
+                ui.add_space(10.0);
 
-            if ui.button("📝 Model Info").clicked() {
-                self.state = AppState::ModelInfo;
-            }
-            ui.add_space(10.0);
+                if ui.button("📝 Model Info").clicked() {
+                    self.state = AppState::ModelInfo;
+                }
+                ui.add_space(10.0);
 
-            if ui.button("🚪Exit").clicked() {
-                std::process::exit(0);
-            }
+                if ui.button("🚪Exit").clicked() {
+                    std::process::exit(0);
+                }
+            });
         });
-    });
-}
+        }
 
 
     fn show_chat(&mut self, ctx: &egui::Context) {
