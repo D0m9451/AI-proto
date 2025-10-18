@@ -172,7 +172,7 @@ impl VinnyApp {
                 }
             });
         });
-        }
+    }
 
 
     fn show_chat(&mut self, ctx: &egui::Context) {

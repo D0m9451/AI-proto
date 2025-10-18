@@ -1,9 +1,13 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 import torch
+import os
 import time
 import threading
 import sys
+
+
+torch.set_num_threads(os.cpu_count())
 
 modelpath = "./models/Qwen2.5-3B"
 adapterpath = "./vinny-lora-adapter"
@@ -48,16 +52,18 @@ while True:
 
     start = time.time()
 
-    output = model.generate(
-        **inputs,
-        max_new_tokens = 77,
-        eos_token_id = tokenizer.eos_token_id,
-        pad_token_id = tokenizer.eos_token_id,
-        do_sample = True,
-        temperature = 0.5,
-        top_p = 0.85,
-        repetition_penalty = 1.2
-    )
+    with torch.inference_mode():
+        output = model.generate(
+            **inputs,
+            max_new_tokens = 77,
+            eos_token_id = tokenizer.eos_token_id,
+            pad_token_id = tokenizer.eos_token_id,
+            do_sample = True,
+            temperature = 0.5,
+            top_p = 0.85,
+            repetition_penalty = 1.2,
+            use_cache = True
+        )
 
     # Stop spinner
     stop_event.set()
