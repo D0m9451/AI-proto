@@ -1,10 +1,13 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
+from pathlib import Path
 import torch
 import os
 import time
 import threading
 import sys
+
+os.chdir(Path(__file__).parent)
 
 
 torch.set_num_threads(os.cpu_count())
