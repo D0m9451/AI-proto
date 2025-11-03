@@ -1,10 +1,10 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, TextIteratorStreamer
 from peft import PeftModel
 from pathlib import Path
+from threading import Thread
 import torch
 import os
 import time
-import threading
 import sys
 
 os.chdir(Path(__file__).parent)
@@ -47,33 +47,42 @@ while True:
 
     inputs = tokenizer(fullprompt, return_tensors="pt").to("cpu")
 
+    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+
     # Start spinner
-    stop_event = threading.Event()
-    spinner_thread = threading.Thread(target=spinner, args=(stop_event,))
-    stop_event.clear()
-    spinner_thread.start()
+    #stop_event = threading.Event()
+    #spinner_thread = threading.Thread(target=spinner, args=(stop_event,))
+    #stop_event.clear()
+    #spinner_thread.start()
 
     start = time.time()
 
-    with torch.inference_mode():
-        output = model.generate(
-            **inputs,
-            max_new_tokens = 77,
-            eos_token_id = tokenizer.eos_token_id,
-            pad_token_id = tokenizer.eos_token_id,
-            do_sample = True,
-            temperature = 0.5,
-            top_p = 0.85,
-            repetition_penalty = 1.2,
-            use_cache = True
-        )
+    generation_kwargs = dict(
+        **inputs,
+        max_new_tokens=128,
+        do_sample=True,
+        temperature=0.7,
+        top_p=0.85,
+        repetition_penalty=1.2,
+        streamer=streamer,
+        use_cache=True
+    )
+
+
+    thread = Thread(target=model.generate, kwargs=generation_kwargs)
+    thread.start()
 
     # Stop spinner
-    stop_event.set()
-    spinner_thread.join()
+    #stop_event.set()
+    #spinner_thread.join()
 
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
-    vinnyreply = response[len(fullprompt):].strip().split("\n")[0]
+    #response = tokenizer.decode(output[0], skip_special_tokens=True)
+    #vinnyreply = response[len(fullprompt):].strip().split("\n")[0]
+
+    print("Vinny:", end=" ", flush=True)
+    for token in streamer:
+        sys.stdout.write(token)
+        sys.stdout.flush()
 
     print(f"\nGenerated in {time.time() - start:.2f} seconds")
-    print(f"Vinny 2.7: {vinnyreply}")
+    print()
