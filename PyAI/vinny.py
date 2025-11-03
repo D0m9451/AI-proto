@@ -86,5 +86,5 @@ while True:
         sys.stdout.write(token)
         sys.stdout.flush()
 
-    print(f"\nGenerated in {time.time() - start:.2f} seconds")
     print()
+    print(f"\nGenerated in {time.time() - start:.2f} seconds")
