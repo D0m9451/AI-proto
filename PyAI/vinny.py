@@ -9,7 +9,6 @@ import sys
 
 os.chdir(Path(__file__).parent)
 
-
 torch.set_num_threads(os.cpu_count())
 
 modelpath = "./models/Qwen2.5-3B"
@@ -40,6 +39,9 @@ def spinner(stop_event):
             sys.stdout.write(f"\rVinny is thinking... {c}")
             sys.stdout.flush()
             time.sleep(0.1)
+
+
+
 
 while True:
     userinput = input("User: ")
