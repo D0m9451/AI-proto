@@ -1,9 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use eframe::{egui, App, Frame, NativeOptions};
-
 #[derive(PartialEq)]
-
 
 enum AppState {
     MainMenu,
@@ -178,8 +176,25 @@ impl VinnyApp {
     fn show_chat(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("💬 Chat room");
-            ui.label("Chat room bit");
+            ui.label("Chat room: ");
+            
+            egui::SidePanel::left("left_panel")
+                .default_width(220.0)   // width of the left panel
+                .resizable(true)        // allow user to resize (optional)
+                .show(ctx, |ui| {
+                    ui.heading("Model Settings");
+                    ui.separator();
+                    ui.label("Max Tokens: ");
+                    ui.separator();
+                    ui.label("Temperature: ");
+                    ui.separator();
+                    ui.label("Top P: ");
+                    ui.separator();
+                    ui.label("Repetition penalty: ");
+                    ui.separator();
+            });
 
+            ui.add_space(325.0);
             if ui.button("Back to Menu").clicked() {
                 self.state = AppState::MainMenu;
             }
