@@ -25,6 +25,8 @@ enum Theme {
 struct VinnyApp {
     state: AppState,
     theme: Theme,
+    max: i32,
+    temp:f32,
 }
 
 impl Default for VinnyApp {
@@ -32,6 +34,8 @@ impl Default for VinnyApp {
         Self {
             state: AppState::MainMenu,
             theme: Theme::Dark,
+            max: 200,
+            temp: 0.7,
         }
     }
 }
@@ -185,15 +189,24 @@ impl VinnyApp {
                     ui.heading("Model Settings");
                     ui.separator();
                     ui.label("Max Tokens: ");
+                    ui.add(
+                        egui::Slider::new(&mut self.max, 0..=1000)
+                    );
                     ui.separator();
+
                     ui.label("Temperature: ");
+                    ui.add(
+                        egui::Slider::new(&mut self.temp, 0.0..=1.0)
+                    );
                     ui.separator();
+                    
                     ui.label("Top P: ");
                     ui.separator();
+
                     ui.label("Repetition penalty: ");
                     ui.separator();
-            });
 
+            });
             ui.add_space(325.0);
             if ui.button("Back to Menu").clicked() {
                 self.state = AppState::MainMenu;
