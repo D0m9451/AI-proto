@@ -187,26 +187,29 @@ impl VinnyApp {
             ui.label("Chat room: ");
 
             egui::SidePanel::right("right_panel")
-                .default_width(220.0)   // width of the left panel
-                .resizable(true)        // allow user to resize (optional)
-                .show(ctx, |ui|{
-                    let height = ui.available_height();
+                .default_width(220.0)
+                .resizable(true)
+                .show(ctx, |ui| {
+                    // Reserve space for input box at bottom
+                    let input_height = 20.0; // Adjust based on your needs
+                    let available_height = ui.available_height();
+                    let messages_height = available_height - input_height;
 
-                    egui::ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui|{
-                        
-                        let history = height - 70.0;
-                        ui.set_min_height(history.max(0.0));
+                    // Messages scroll area
+                    egui::ScrollArea::vertical()
+                        .stick_to_bottom(true)
+                        .max_height(messages_height)
+                        .show(ui, |ui| {
+                            for msg in &self.messages {
+                                ui.group(|ui| {
+                                    ui.label(format!("user: {}", msg));
+                                });
+                            }
+                        });
 
-                        for msg in &self.messages{
-                            ui.group(|ui|{
-                                ui.label(format!("user: {}", msg));
-                            
-                            });
-                        }
-                    });
-                
                     ui.separator();
-                    
+
+                    // Input box (always visible at bottom)
                     ui.horizontal(|ui| {
                         let input = ui.text_edit_multiline(&mut self.input);
 
@@ -217,10 +220,8 @@ impl VinnyApp {
                         if input.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                             self.send();
                         }
-
                     });
                 });
-        
     
 
             
