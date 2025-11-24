@@ -27,6 +27,8 @@ struct VinnyApp {
     theme: Theme,
     max: i32,
     temp:f32,
+    input: String,
+    messages: Vec<String>,
 }
 
 impl Default for VinnyApp {
@@ -36,6 +38,8 @@ impl Default for VinnyApp {
             theme: Theme::Dark,
             max: 200,
             temp: 0.7,
+            input: String::new(),
+            messages: vec![],
         }
     }
 }
@@ -181,6 +185,44 @@ impl VinnyApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("💬 Chat room");
             ui.label("Chat room: ");
+
+            egui::SidePanel::right("right_panel")
+                .default_width(220.0)   // width of the left panel
+                .resizable(true)        // allow user to resize (optional)
+                .show(ctx, |ui|{
+                    let height = ui.available_height();
+
+                    egui::ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui|{
+                        
+                        let history = height - 70.0;
+                        ui.set_min_height(history.max(0.0));
+
+                        for msg in &self.messages{
+                            ui.group(|ui|{
+                                ui.label(format!("user: {}", msg));
+                            
+                            });
+                        }
+                    });
+                
+                    ui.separator();
+                    
+                    ui.horizontal(|ui| {
+                        let input = ui.text_edit_multiline(&mut self.input);
+
+                        if ui.button("Send ➡️").clicked() {
+                            self.send();
+                        }
+
+                        if input.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                            self.send();
+                        }
+
+                    });
+                });
+        
+    
+
             
             egui::SidePanel::left("left_panel")
                 .default_width(220.0)   // width of the left panel
@@ -207,6 +249,7 @@ impl VinnyApp {
                     ui.separator();
 
             });
+
             ui.add_space(325.0);
             if ui.button("Back to Menu").clicked() {
                 self.state = AppState::MainMenu;
@@ -292,6 +335,14 @@ Information on this medel is desplayed below:
             }
         });
     }
+
+    fn send(&mut self) {
+        if !self.input.trim().is_empty() {
+            self.messages.push(self.input.clone());
+            self.input.clear();
+        }
+    }
+
 }
 
 fn main() {
