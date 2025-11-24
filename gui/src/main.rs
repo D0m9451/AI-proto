@@ -27,6 +27,8 @@ struct VinnyApp {
     theme: Theme,
     max: i32,
     temp:f32,
+    topP: f32,
+    repPen: f32,
     input: String,
     messages: Vec<String>,
 }
@@ -38,6 +40,8 @@ impl Default for VinnyApp {
             theme: Theme::Dark,
             max: 200,
             temp: 0.7,
+            topP: 0.85,
+            repPen: 1.2,
             input: String::new(),
             messages: vec![],
         }
@@ -244,9 +248,15 @@ impl VinnyApp {
                     ui.separator();
                     
                     ui.label("Top P: ");
+                    ui.add(
+                        egui::Slider::new(&mut self.topP, 0.0..=10.0)
+                    );
                     ui.separator();
 
                     ui.label("Repetition penalty: ");
+                    ui.add(
+                        egui::Slider::new(&mut self.repPen, 0.0..=10.0)
+                    );
                     ui.separator();
 
             });
