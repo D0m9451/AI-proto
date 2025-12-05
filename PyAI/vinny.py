@@ -6,6 +6,18 @@ import torch
 import os
 import time
 import sys
+import socket  
+
+thesocket = None  
+
+try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(('localhost', 8080))
+    s.send(b"TEST")
+    s.close()
+    print("Connection worked!")
+except Exception as e:
+    print(f"Connection failed: {e}")
 
 os.chdir(Path(__file__).parent)
 
@@ -32,31 +44,25 @@ model = model.to("cpu")
 
 systemprompt = "Your name is vinny,  — a desktop assistant AI. You are helpful, creative, clever, and very friendly. Your responses should be in-depth and detailed."
 
-# Spinner function
-def spinner(stop_event):
-    while not stop_event.is_set():
-        for c in "|/-\\":
-            sys.stdout.write(f"\rVinny is thinking... {c}")
-            sys.stdout.flush()
-            time.sleep(0.1)
+def transmit(token):
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect(('localhost', 8080)) 
+        client.sendall(token.encode('utf-8'))
+        client.close()
+        print(f"[SENT: {repr(token)}]", end="", flush=True)
+    except Exception as e:
+        print(f"[ERROR: {e}]", end="", flush=True)
+        pass  
 
 
 
 
 while True:
-    userinput = input("User: ")
+    userinput = input("\nUser: ")
     fullprompt = systemprompt + "\nUser: " + userinput + "\nVinny:"
-
     inputs = tokenizer(fullprompt, return_tensors="pt").to("cpu")
-
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
-
-    # Start spinner
-    #stop_event = threading.Event()
-    #spinner_thread = threading.Thread(target=spinner, args=(stop_event,))
-    #stop_event.clear()
-    #spinner_thread.start()
-
     start = time.time()
 
     generation_kwargs = dict(
@@ -72,21 +78,14 @@ while True:
         use_cache=True
     )
 
-
     thread = Thread(target=model.generate, kwargs=generation_kwargs)
     thread.start()
-
-    # Stop spinner
-    #stop_event.set()
-    #spinner_thread.join()
-
-    #response = tokenizer.decode(output[0], skip_special_tokens=True)
-    #vinnyreply = response[len(fullprompt):].strip().split("\n")[0]
 
     print("Vinny:", end=" ", flush=True)
     for token in streamer:
         sys.stdout.write(token)
         sys.stdout.flush()
+        transmit(token)
 
     print()
     print(f"\nGenerated in {time.time() - start:.2f} seconds")

@@ -1,7 +1,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use eframe::{egui, App, Frame, NativeOptions};
+use std::sync::{Arc, Mutex};
+use std::net::{TcpListener, TcpStream};
+use std::io::Read;
+use std::thread;
 #[derive(PartialEq)]
+
+
+
+
 
 enum AppState {
     MainMenu,
@@ -31,10 +39,45 @@ struct VinnyApp {
     repPen: f32,
     input: String,
     messages: Vec<String>,
+    receiver: Arc<Mutex<String>>,
+    connect: Arc<Mutex<String>>,
+    listener: Option<std::thread::JoinHandle<()>>,
 }
 
 impl Default for VinnyApp {
     fn default() -> Self {
+        let receiver = Arc::new(Mutex::new(String::new()));
+        let connect = Arc::new(Mutex::new(String::from("Ready")));
+        let text_clone = Arc::clone(&receiver);
+        let status_clone = Arc::clone(&connect);
+        
+        // Start listener thread
+        let handle = thread::spawn(move || {
+            let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+            println!("✓ Listening on port 8080");
+            
+            for stream in listener.incoming() {
+                if let Ok(stream) = stream {
+                    *status_clone.lock().unwrap() = String::from("🟢 Receiving...");
+                    
+                    let mut buffer = [0; 1024];
+                    let mut stream = stream;
+                    loop {
+                        match stream.read(&mut buffer) {
+                            Ok(0) => break,
+                            Ok(n) => {
+                                let chunk = String::from_utf8_lossy(&buffer[..n]);
+                                text_clone.lock().unwrap().push_str(&chunk);
+                            }
+                            Err(_) => break,
+                        }
+                    }
+                    
+                    *status_clone.lock().unwrap() = String::from("Ready");
+                }
+            }
+        });
+
         Self {
             state: AppState::MainMenu,
             theme: Theme::Dark,
@@ -44,6 +87,9 @@ impl Default for VinnyApp {
             repPen: 1.2,
             input: String::new(),
             messages: vec![],
+            receiver,
+            connect,
+            listener: Some(handle),
         }
     }
 }
@@ -186,6 +232,8 @@ impl VinnyApp {
 
 
     fn show_chat(&mut self, ctx: &egui::Context) {
+        ctx.request_repaint();
+
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("💬 Chat room");
             ui.label("Chat room: ");
@@ -204,9 +252,18 @@ impl VinnyApp {
                         .stick_to_bottom(true)
                         .max_height(messages_height)
                         .show(ui, |ui| {
+                            // Show previous messages
                             for msg in &self.messages {
                                 ui.group(|ui| {
-                                    ui.label(format!("user: {}", msg));
+                                    ui.label(format!("User: {}", msg));
+                                });
+                            }
+        
+                            // Show streaming AI response
+                            let ai_text = self.receiver.lock().unwrap();
+                            if !ai_text.is_empty() {
+                                ui.group(|ui| {
+                                    ui.label(format!("Vinny: {}", &*ai_text));
                                 });
                             }
                         });
