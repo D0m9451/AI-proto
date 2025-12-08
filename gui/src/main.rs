@@ -51,14 +51,14 @@ impl Default for VinnyApp {
         let text_clone = Arc::clone(&receiver);
         let status_clone = Arc::clone(&connect);
         
-        // Start listener thread
+        
         let handle = thread::spawn(move || {
             let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-            println!("✓ Listening on port 8080");
+            println!("Listening on port 8080");
             
             for stream in listener.incoming() {
                 if let Ok(stream) = stream {
-                    *status_clone.lock().unwrap() = String::from("🟢 Receiving...");
+                    *status_clone.lock().unwrap() = String::from("Receiving...");
                     
                     let mut buffer = [0; 1024];
                     let mut stream = stream;
@@ -242,24 +242,24 @@ impl VinnyApp {
                 .default_width(220.0)
                 .resizable(true)
                 .show(ctx, |ui| {
-                    // Reserve space for input box at bottom
-                    let input_height = 20.0; // Adjust based on your needs
+                    
+                    let input_height = 20.0;
                     let available_height = ui.available_height();
                     let messages_height = available_height - input_height;
 
-                    // Messages scroll area
+                    
                     egui::ScrollArea::vertical()
                         .stick_to_bottom(true)
                         .max_height(messages_height)
                         .show(ui, |ui| {
-                            // Show previous messages
+                        
                             for msg in &self.messages {
                                 ui.group(|ui| {
                                     ui.label(format!("User: {}", msg));
                                 });
                             }
         
-                            // Show streaming AI response
+                            
                             let ai_text = self.receiver.lock().unwrap();
                             if !ai_text.is_empty() {
                                 ui.group(|ui| {
@@ -270,7 +270,7 @@ impl VinnyApp {
 
                     ui.separator();
 
-                    // Input box (always visible at bottom)
+                    
                     ui.horizontal(|ui| {
                         let input = ui.text_edit_multiline(&mut self.input);
 
