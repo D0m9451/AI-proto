@@ -408,9 +408,25 @@ impl VinnyApp {
         });
     }
 
+
+
+    fn sendAI(prompt: &str) {
+        let prompt = prompt.to_string();
+        thread::spawn(move || {
+            if let Ok(mut stream) = std::net::TcpStream::connect("127.0.0.1:9090") {
+                use std::io::Write;
+                let _ = stream.write_all(prompt.as_bytes());
+            }
+        });
+    }
+
+
+
     fn send(&mut self) {
         if !self.input.trim().is_empty() {
             self.messages.push(self.input.clone());
+            Self::sendAI(&self.input);
+
             self.input.clear();
         }
     }

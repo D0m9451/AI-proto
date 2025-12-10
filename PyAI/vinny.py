@@ -9,7 +9,7 @@ import sys
 import socket  
 
 thesocket = None  
-
+'''
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(('localhost', 8080))
@@ -18,6 +18,7 @@ try:
     print("Connection worked!")
 except Exception as e:
     print(f"Connection failed: {e}")
+'''
 
 os.chdir(Path(__file__).parent)
 
@@ -55,11 +56,22 @@ def transmit(token):
         print(f"[ERROR: {e}]", end="", flush=True)
         pass  
 
+def listen():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(('localhost', 9090)) 
+    server.listen(1)
+    print("Listening for user input on port 9090...")
+
+    while True:
+        conn, addr = server.accept()
+        data = conn.recv(1024).decode('utf-8')
+        return data
 
 
 
 while True:
-    userinput = input("\nUser: ")
+    userinput = listen()
+    print(f"\nUser: {userinput}\n") 
     fullprompt = systemprompt + "\nUser: " + userinput + "\nVinny:"
     inputs = tokenizer(fullprompt, return_tensors="pt").to("cpu")
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
