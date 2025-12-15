@@ -29,6 +29,12 @@ enum Theme {
     Infernus,
 
 }
+enum ChatMsg {
+    User(String),
+    AI(String),
+}
+
+
 
 struct VinnyApp {
     state: AppState,
@@ -38,15 +44,15 @@ struct VinnyApp {
     topP: f32,
     repPen: f32,
     input: String,
-    messages: Vec<String>,
-    receiver: Arc<Mutex<String>>,
+    receiver: Arc<Mutex<Vec<String>>>,
     connect: Arc<Mutex<String>>,
     listener: Option<std::thread::JoinHandle<()>>,
+    messages: Vec<ChatMsg>
 }
 
 impl Default for VinnyApp {
     fn default() -> Self {
-        let receiver = Arc::new(Mutex::new(String::new()));
+        let receiver = Arc::new(Mutex::new(Vec::<String>::new()));
         let connect = Arc::new(Mutex::new(String::from("Ready")));
         let text_clone = Arc::clone(&receiver);
         let status_clone = Arc::clone(&connect);
@@ -57,26 +63,31 @@ impl Default for VinnyApp {
             println!("Listening on port 8080");
             
             for stream in listener.incoming() {
-                if let Ok(stream) = stream {
+                if let Ok(mut stream) = stream {
                     *status_clone.lock().unwrap() = String::from("Receiving...");
                     
                     let mut buffer = [0; 1024];
-                    let mut stream = stream;
+                    let mut response = String::new();
+
                     loop {
                         match stream.read(&mut buffer) {
                             Ok(0) => break,
                             Ok(n) => {
-                                let chunk = String::from_utf8_lossy(&buffer[..n]);
-                                text_clone.lock().unwrap().push_str(&chunk);
+                                response.push_str(&String::from_utf8_lossy(&buffer[..n]));
                             }
                             Err(_) => break,
                         }
                     }
-                    
-                    *status_clone.lock().unwrap() = String::from("Ready");
-                }
-            }
-        });
+
+                    if !response.trim().is_empty() {
+                        text_clone.lock().unwrap().push(response);
+                    }
+
+                                        
+                                        *status_clone.lock().unwrap() = String::from("Ready");
+                                    }
+                                }
+                            });
 
         Self {
             state: AppState::MainMenu,
@@ -233,6 +244,20 @@ impl VinnyApp {
 
     fn show_chat(&mut self, ctx: &egui::Context) {
         ctx.request_repaint();
+        let new_messages = {
+            let mut receiver = self.receiver.lock().unwrap();
+            receiver.drain(..).collect::<Vec<String>>()
+        };
+
+        for ai_msg in new_messages {
+            if let Some(ChatMsg::AI(last_msg)) = self.messages.last_mut() {
+                last_msg.push_str(&ai_msg);
+            }
+            else {
+                self.messages.push(ChatMsg::AI(ai_msg));
+            }
+    
+        }
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("💬 Chat room");
@@ -254,17 +279,18 @@ impl VinnyApp {
                         .show(ui, |ui| {
                         
                             for msg in &self.messages {
-                                ui.group(|ui| {
-                                    ui.label(format!("User: {}", msg));
-                                });
-                            }
-        
-                            
-                            let ai_text = self.receiver.lock().unwrap();
-                            if !ai_text.is_empty() {
-                                ui.group(|ui| {
-                                    ui.label(format!("Vinny: {}", &*ai_text));
-                                });
+                                match msg {
+                                    ChatMsg::User(text) => {
+                                        ui.group(|ui| {
+                                            ui.label(format!("User: {}", text));
+                                        });
+                                    }
+                                    ChatMsg::AI(text) => {
+                                        ui.group(|ui| {
+                                            ui.label(format!("Vinny: {}", text));
+                                        });
+                                    }
+                                }
                             }
                         });
 
@@ -424,7 +450,8 @@ impl VinnyApp {
 
     fn send(&mut self) {
         if !self.input.trim().is_empty() {
-            self.messages.push(self.input.clone());
+            self.messages.push(ChatMsg::User(self.input.clone()));
+            self.messages.push(ChatMsg::AI(String::new()));
             Self::sendAI(&self.input);
 
             self.input.clear();
