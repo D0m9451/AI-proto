@@ -64,8 +64,8 @@ training_args = TrainingArguments(
     output_dir=outputdir,
     per_device_train_batch_size=batch_size,
     num_train_epochs=num_epochs,
-    save_steps=50,                  # Save every 50 steps (adjust if needed)
-    save_total_limit=3,              # Keep last 3 checkpoints
+    save_steps=50,                  
+    save_total_limit=3,              
     logging_steps=5,
     learning_rate=learning_rate,
     fp16=False,
@@ -84,7 +84,6 @@ last_checkpoint = None
 if os.path.isdir(outputdir):
     checkpoints = [d for d in os.listdir(outputdir) if d.startswith("checkpoint-")]
     if checkpoints:
-        # Get latest checkpoint by highest step number
         last_checkpoint = os.path.join(outputdir, sorted(checkpoints, key=lambda x: int(x.split("-")[1]))[-1])
         print(f"Resuming from checkpoint: {last_checkpoint}")
 
