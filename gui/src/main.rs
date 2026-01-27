@@ -26,7 +26,7 @@ enum Theme {
     Greyscale,
     Punk,
     DarkPunk,
-    Infernus,
+    Fire,
 
 }
 enum ChatMsg {
@@ -177,7 +177,7 @@ impl App for VinnyApp {
                 visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(255, 0, 208);
                 ctx.set_visuals(visuals);
             }
-            Theme::Infernus => {
+            Theme::Fire => {
                 let mut visuals = egui::Visuals::dark();
                 visuals.window_fill = egui::Color32::from_rgb(15, 0, 0);
                 visuals.panel_fill = egui::Color32::from_rgb(40, 5, 5);
@@ -383,7 +383,7 @@ impl VinnyApp {
                     self.theme = Theme::DarkPunk
                 }
                 if ui.button("Infernus").clicked() {
-                    self.theme = Theme::Infernus
+                    self.theme = Theme::Fire
                 }
             });
             ui.horizontal_wrapped(|ui| {
@@ -406,7 +406,7 @@ impl VinnyApp {
                         .stick_to_bottom(true)
                         .show(ui, |ui| {
                             ui.label("This program uses the AI model Qwen2.5-3B.
-                Information on this medel is desplayed below:
+                Information on this model is desplayed below:
 
                     Qwen2.5 is the latest series of Qwen large language models. For Qwen2.5, we release a number of base language models and instruction-tuned language models ranging from 0.5 to 72 billion parameters. Qwen2.5 brings the following improvements upon Qwen2:
 
