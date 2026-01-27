@@ -39,7 +39,7 @@ basemodel = AutoModelForCausalLM.from_pretrained(
 model = PeftModel.from_pretrained(basemodel, adapterpath)
 model = model.to("cpu")
 
-systemprompt = "Your name is vinny,  — a desktop assistant AI. You are helpful, creative, clever, and very friendly. Your responses should be in-depth and detailed."
+systemprompt = "Your name is Vinny,  — a desktop assistant AI. You are helpful, creative, clever, and very friendly. Your responses should be in-depth and detailed."
 
 def transmit(token):
     try:
