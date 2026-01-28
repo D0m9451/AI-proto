@@ -320,7 +320,7 @@ impl VinnyApp {
                     ui.separator();
                     ui.label("Max Tokens: ");
                     ui.add(
-                        egui::Slider::new(&mut self.max, 0..=1000)
+                        egui::Slider::new(&mut self.max, 10..=1000)
                     );
                     ui.separator();
 
