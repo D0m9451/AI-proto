@@ -12,23 +12,42 @@ fn construct(mem: &ShortMem) -> String {
     let user = mem.user.as_deref().unwrap_or("");
     let model = mem.model.as_deref().unwrap_or("");
 
-    format!("Context:\n{}\n{}", user, model)
+    format!("Context:\n User: {}\n Vinny: {}", user, model)
 }
 
 
-fn guilisten<T>() {
+
+
+
+fn guilisten(mem: Arc<Mutex<ShortMem>>) {
+
     let listener = TcpListener::bind("127.0.0:1:9090").unwrap();
     for stream in listener.incoming() {
-        let user = Arc::new(Mutex::new(None::<T>));
+        let mut stream = stream.unwrap();
+        let mut buffer = String::new();
+        stream.read_to_string(&mut buffer).unwrap();
+
+        let mut mem = mem.lock().unwrap();
+        mem.user = Some(buffer.trim().to_string());
+        mem.model = None;
     }
 }
 
-fn modellisten<T>() {
+fn modellisten(mem: Arc<Mutex<ShortMem>>) {
     let listener = TcpListener::bind("127.0.0:1:8080").unwrap();
+
     for stream in listener.incoming() {
-        let model = Arc::new(Mutex::new(None::<T>));
+        let mut stream = stream.unwrap();
+        let mut buffer = String::new();
+        stream.read_to_string(&mut buffer).unwrap();
+
+        let mut mem = mem.lock().unwrap();
+        mem.model = Some(buffer.trim().to_string());
     }
 }
+
+
+
 
 
 
@@ -45,15 +64,31 @@ fn sendmodel() {
 
 
 
+fn short() {
+    let mem = Arc::new(Mutex::new(ShortMem {
+        user: None,
+        model: None,
+    }));
+
+
+    let memgui = Arc::clone(&mem);
+    let memmodel = Arc::clone(&mem);
+
+    thread::spawn(move || { guilisten(memgui);});
+    thread::spawn(move || { modellisten(memmodel);});
+    loop {
+        let memlock = mem.lock().unwrap();
+        let prompt = construct(&memlock);
+        drop(memlock);
+
+        println!("{}", prompt);
+        std::thread::sleep(std::time::Duration::from_secs(5));
+    }
+
+}
+
+/*-------------------------------------------------------------------------------------------------------------------------- */
+
 fn main() {
-    //guilisten();
-
-    let mem = ShortMem {
-        user: Some("Hello".to_string()),
-        model: Some("Hi!".to_string()),
-    };
-
-
-    let prompt = construct(&mem);
-    println!("{}", prompt); 
+    short();
 }
