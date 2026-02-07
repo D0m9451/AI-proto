@@ -52,12 +52,12 @@ fn modellisten(mem: Arc<Mutex<ShortMem>>) {
 
 
 fn sendgui() {
-    let mut stream = TcpStream::connect("127.0.0:1:9090").unwrap();
+    let mut stream = TcpStream::connect("127.0.0.1:9090").unwrap();
     stream.write_all(b"RAHGOOO").unwrap();
 }
 
 fn sendmodel() {
-    let mut stream = TcpStream::connect("127.0.0:1:8080").unwrap();
+    let mut stream = TcpStream::connect("127.0.0.1:8080").unwrap();
     stream.write_all(b"GOOORAH").unwrap();
 }
 
