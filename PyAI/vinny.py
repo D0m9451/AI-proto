@@ -54,9 +54,9 @@ def transmit(token):
 
 def listen():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('localhost', 9090)) 
+    server.bind(('localhost', 9091)) 
     server.listen(1)
-    print("Listening for user input on port 9090...")
+    print("Listening for user input on port 9091...")
 
     while True:
         conn, addr = server.accept()

@@ -59,8 +59,8 @@ impl Default for VinnyApp {
         
         
         let handle = thread::spawn(move || {
-            let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-            println!("Listening on port 8080");
+            let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
+            println!("Listening on port 8081");
             
             for stream in listener.incoming() {
                 if let Ok(mut stream) = stream {

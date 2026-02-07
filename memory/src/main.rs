@@ -1,48 +1,76 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Condvar};
 use std::net::{TcpListener, TcpStream};
 use std::io::{Read, Write};
 use std::thread;
-
 struct ShortMem {
-    user: Option<String>,
     model: Option<String>,
+    user: Option<String>,
+    updated: bool,
+}
+
+struct Shared {
+    mem: Mutex<ShortMem>,
+    condvar: Condvar,
 }
 
 fn construct(mem: &ShortMem) -> String {
     let user = mem.user.as_deref().unwrap_or("");
     let model = mem.model.as_deref().unwrap_or("");
 
-    format!("Context:\n User: {}\n Vinny: {}", user, model)
+    format!("Context:\n Vinny: {}\n User: {}", model, user)
+}
+
+fn core_loop(shared: Arc<Shared>) {
+    let mut guard = shared.mem.lock().unwrap();
+    loop {
+        while !guard.updated {
+                guard = shared.condvar.wait(guard).unwrap();
+            }
+
+            println!("{}", construct(&guard));
+
+            guard.updated = false; // consume the event
+    }
+    
 }
 
 
 
 
 
-fn guilisten(mem: Arc<Mutex<ShortMem>>) {
+fn guilisten(shared: Arc<Shared>) {
 
-    let listener = TcpListener::bind("127.0.0:1:9090").unwrap();
+    let listener = TcpListener::bind("127.0.0.1:9090").unwrap();
+
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        let mut buffer = String::new();
-        stream.read_to_string(&mut buffer).unwrap();
+        let mut buf = [0; 4096];
+        let n = stream.read(&mut buf).unwrap();
 
-        let mut mem = mem.lock().unwrap();
-        mem.user = Some(buffer.trim().to_string());
-        mem.model = None;
+        let msg = String::from_utf8_lossy(&buf[..n]).trim().to_string();
+
+        let mut mem = shared.mem.lock().unwrap();
+        mem.user = Some(msg);
+        mem.updated = true;
+
+        shared.condvar.notify_one();
     }
 }
 
-fn modellisten(mem: Arc<Mutex<ShortMem>>) {
-    let listener = TcpListener::bind("127.0.0:1:8080").unwrap();
+fn modellisten(shared: Arc<Shared>) {
+    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        let mut buffer = String::new();
-        stream.read_to_string(&mut buffer).unwrap();
+        let mut buf = [0; 4096];
+        let n = stream.read(&mut buf).unwrap();
 
-        let mut mem = mem.lock().unwrap();
-        mem.model = Some(buffer.trim().to_string());
+        let msg = String::from_utf8_lossy(&buf[..n]).trim().to_string();
+
+        let mut mem = shared.mem.lock().unwrap();
+        mem.model = Some(msg);
+
+        shared.condvar.notify_one(); 
     }
 }
 
@@ -52,42 +80,52 @@ fn modellisten(mem: Arc<Mutex<ShortMem>>) {
 
 
 fn sendgui() {
-    let mut stream = TcpStream::connect("127.0.0.1:9090").unwrap();
+    let mut stream = TcpStream::connect("127.0.0.1:8081").unwrap();
     stream.write_all(b"RAHGOOO").unwrap();
 }
 
-fn sendmodel() {
-    let mut stream = TcpStream::connect("127.0.0.1:8080").unwrap();
-    stream.write_all(b"GOOORAH").unwrap();
+fn sendmodel(prompt: &str) {
+    let prompt = prompt.to_string();
+        thread::spawn(move || {
+            if let Ok(mut stream) = std::net::TcpStream::connect("127.0.0.1:9091") {
+                use std::io::Write;
+                let _ = stream.write_all(prompt.as_bytes());
+            }
+        });
 }
 
 
 
 
 fn short() {
-    let mem = Arc::new(Mutex::new(ShortMem {
-        user: None,
-        model: None,
-    }));
+    let shared = Arc::new(Shared {
+        mem: Mutex::new(ShortMem {
+            model: None,
+            user: None,
+            updated: false,
+        }),
+        condvar: Condvar::new(),
+    });
 
+    let gui_shared = Arc::clone(&shared);
+    let model_shared = Arc::clone(&shared);
 
-    let memgui = Arc::clone(&mem);
-    let memmodel = Arc::clone(&mem);
+    thread::spawn(move || guilisten(gui_shared));
+    thread::spawn(move || modellisten(model_shared));
 
-    thread::spawn(move || { guilisten(memgui);});
-    thread::spawn(move || { modellisten(memmodel);});
-    loop {
-        let memlock = mem.lock().unwrap();
-        let prompt = construct(&memlock);
-        drop(memlock);
+    core_loop(shared);
 
-        println!("{}", prompt);
-        std::thread::sleep(std::time::Duration::from_secs(5));
-    }
+}
 
+/*------------------------------------------------------------------------------------------------------------ */
+
+fn long() {
+    // Placeholder for a more complex implementation
+    println!("Long memory system is not implemented yet.");
 }
 
 
 fn main() {
     short();
+    //long();
 }
