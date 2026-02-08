@@ -69,6 +69,7 @@ fn modellisten(shared: Arc<Shared>) {
 
         let mut mem = shared.mem.lock().unwrap();
         mem.model = Some(msg);
+        mem.updated = true;
 
         shared.condvar.notify_one(); 
     }
@@ -114,6 +115,8 @@ fn short() {
     thread::spawn(move || modellisten(model_shared));
 
     core_loop(shared);
+
+    
 
 }
 
