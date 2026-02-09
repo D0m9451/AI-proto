@@ -59,7 +59,7 @@ impl Default for VinnyApp {
         
         
         let handle = thread::spawn(move || {
-            let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+            let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
             println!("Listening on port 8080");
             
             for stream in listener.incoming() {
@@ -71,6 +71,7 @@ impl Default for VinnyApp {
 
                     loop {
                         match stream.read(&mut buffer) {
+
                             Ok(0) => break,
                             Ok(n) => {
                                 response.push_str(&String::from_utf8_lossy(&buffer[..n]));
@@ -78,7 +79,12 @@ impl Default for VinnyApp {
                             Err(_) => break,
                         }
                     }
+                    if let Some(end) = response.find("<<END>>") {
+                        response.truncate(end);
+                    }
 
+                    let response = response.to_string();
+                    
                     if !response.trim().is_empty() {
                         text_clone.lock().unwrap().push(response);
                     }
