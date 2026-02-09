@@ -2,10 +2,12 @@ use std::sync::{Arc, Mutex, Condvar};
 use std::net::{TcpListener, TcpStream};
 use std::io::{Read, Write};
 use std::thread;
+
 struct ShortMem {
     model: Option<String>,
     user: Option<String>,
     updated: bool,
+    last_source: Option<Source>,
 }
 
 struct Shared {
@@ -13,26 +15,58 @@ struct Shared {
     condvar: Condvar,
 }
 
+enum Source {
+    Model,
+    User,
+}
+
 fn construct(mem: &ShortMem) -> String {
     let user = mem.user.as_deref().unwrap_or("");
     let model = mem.model.as_deref().unwrap_or("");
 
-    format!("Context:\n Vinny: {}\n User: {}", model, user)
+    format!("Vinny: {}\n User: {}", model, user)
 }
 
 fn core_loop(shared: Arc<Shared>) {
     let mut guard = shared.mem.lock().unwrap();
+
     loop {
+
         while !guard.updated {
-                guard = shared.condvar.wait(guard).unwrap();
+            guard = shared.condvar.wait(guard).unwrap();
+        }
+
+        println!("{}", construct(&guard));
+
+        match guard.last_source {
+            Some(Source::User) => {
+                let prompt = construct(&guard);
+
+                // consume the event
+                guard.updated = false;
+
+                // unlock BEFORE network I/O
+                drop(guard);
+
+                sendmodel(&prompt);
+
+                // re-lock and continue loop
+                guard = shared.mem.lock().unwrap();
             }
 
-            println!("{}", construct(&guard));
+            Some(Source::Model) => {
+                // model finished responding
+                guard.updated = false;
+                // DO NOT send anything back
+            }
 
-            guard.updated = false; // consume the event
+            None => {
+                guard.updated = false;
+            }
+        }
     }
-    
 }
+
 
 
 
@@ -51,6 +85,7 @@ fn guilisten(shared: Arc<Shared>) {
 
         let mut mem = shared.mem.lock().unwrap();
         mem.user = Some(msg);
+        mem.last_source = Some(Source::User);
         mem.updated = true;
 
         shared.condvar.notify_one();
@@ -59,39 +94,58 @@ fn guilisten(shared: Arc<Shared>) {
 
 fn modellisten(shared: Arc<Shared>) {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+    let mut response = String::new();
 
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        let mut buf = [0; 4096];
-        let n = stream.read(&mut buf).unwrap();
+        let mut buf = [0; 1024];
 
-        let msg = String::from_utf8_lossy(&buf[..n]).trim().to_string();
+        loop {
+            let n = stream.read(&mut buf).unwrap();
+            if n == 0 { break; }
 
-        let mut mem = shared.mem.lock().unwrap();
-        mem.model = Some(msg);
-        mem.updated = true;
+            let chunk = String::from_utf8_lossy(&buf[..n]);
+            response.push_str(&chunk);
 
-        shared.condvar.notify_one(); 
+            if response.contains("<<END>>") {
+                let clean = response.replace("<<END>>", "").trim().to_string();
+
+                let mut mem = shared.mem.lock().unwrap();
+                mem.model = Some(clean);
+                mem.last_source = Some(Source::Model);
+                mem.updated = true;
+                shared.condvar.notify_one();
+
+                response.clear();
+                break;
+            }
+        }
     }
 }
 
 
 
 
-
-
+/*
 fn sendgui() {
     let mut stream = TcpStream::connect("127.0.0.1:8081").unwrap();
     stream.write_all(b"RAHGOOO").unwrap();
 }
+*/
 
 fn sendmodel(prompt: &str) {
     let prompt = prompt.to_string();
         thread::spawn(move || {
             if let Ok(mut stream) = std::net::TcpStream::connect("127.0.0.1:9091") {
                 use std::io::Write;
-                let _ = stream.write_all(prompt.as_bytes());
+                let _ = stream.write_all(format!("{}\n",prompt).as_bytes());
+            
+            if let Err(e) = stream.write_all(prompt.as_bytes()) {
+                eprintln!("Failed to send to model: {}", e);
             }
+
+            }
+            
         });
 }
 
@@ -104,6 +158,7 @@ fn short() {
             model: None,
             user: None,
             updated: false,
+            last_source: None,
         }),
         condvar: Condvar::new(),
     });

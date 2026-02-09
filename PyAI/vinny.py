@@ -48,6 +48,13 @@ def transmit(token):
         client.sendall(token.encode('utf-8'))
         client.close()
         print(f"[SENT: {repr(token)}]", end="", flush=True)
+
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect(('localhost', 8081)) 
+        client.sendall(token.encode('utf-8'))
+        client.close()
+        print(f"[SENT: {repr(token)}]", end="", flush=True)
+
     except Exception as e:
         print(f"[ERROR: {e}]", end="", flush=True)
         pass  
@@ -94,6 +101,7 @@ while True:
         sys.stdout.write(token)
         sys.stdout.flush()
         transmit(token)
+    transmit("<<END>>")
 
     print()
     print(f"\nGenerated in {time.time() - start:.2f} seconds")
