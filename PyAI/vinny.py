@@ -74,7 +74,7 @@ def listen():
 
 while True:
     userinput = listen()
-    print(f"\nUser: {userinput}\n") 
+    print(f"\n{userinput}\n") 
     fullprompt = systemprompt + "\nUser: " + userinput + "\nVinny:"
     inputs = tokenizer(fullprompt, return_tensors="pt").to("cpu")
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
@@ -82,7 +82,7 @@ while True:
 
     generation_kwargs = dict(
         **inputs,
-        max_new_tokens=200,
+        max_new_tokens=100,
         do_sample=True,
         eos_token_id=tokenizer.eos_token_id,
         pad_token_id=tokenizer.eos_token_id,
