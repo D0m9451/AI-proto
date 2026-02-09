@@ -84,10 +84,10 @@ impl Default for VinnyApp {
                     }
 
                                         
-                                        *status_clone.lock().unwrap() = String::from("Ready");
-                                    }
-                                }
-                            });
+                    *status_clone.lock().unwrap() = String::from("Ready");
+                }
+            }
+        });
 
         Self {
             state: AppState::MainMenu,
