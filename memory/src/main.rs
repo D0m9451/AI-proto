@@ -125,14 +125,6 @@ fn modellisten(shared: Arc<Shared>) {
 
 
 
-
-/*
-fn sendgui() {
-    let mut stream = TcpStream::connect("127.0.0.1:8081").unwrap();
-    stream.write_all(b"RAHGOOO").unwrap();
-}
-*/
-
 fn sendmodel(prompt: &str) {
     let prompt = prompt.to_string();
     thread::spawn(move || {
