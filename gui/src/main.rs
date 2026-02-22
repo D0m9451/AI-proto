@@ -47,7 +47,8 @@ struct VinnyApp {
     receiver: Arc<Mutex<Vec<String>>>,
     connect: Arc<Mutex<String>>,
     listener: Option<std::thread::JoinHandle<()>>,
-    messages: Vec<ChatMsg>
+    messages: Vec<ChatMsg>,
+    memory: String,
 }
 
 impl Default for VinnyApp {
@@ -107,6 +108,7 @@ impl Default for VinnyApp {
             receiver,
             connect,
             listener: Some(handle),
+            memory: String::new(),
         }
     }
 }
@@ -347,6 +349,13 @@ impl VinnyApp {
                         egui::Slider::new(&mut self.repPen, 0.0..=10.0)
                     );
                     ui.separator();
+
+                    let memory = ui.text_edit_multiline(&mut self.memory);
+
+                    if ui.button("Apply").clicked() {
+                        // Here you would typically send the updated settings to the backend or apply them as needed
+                        println!("Settings applied: max={}, temp={}, topP={}, repPen={}", self.max, self.temp, self.topP, self.repPen); //this does fuck all ;p
+                    }
 
             });
 
