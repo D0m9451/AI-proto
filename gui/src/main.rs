@@ -349,12 +349,12 @@ impl VinnyApp {
                         egui::Slider::new(&mut self.repPen, 0.0..=10.0)
                     );
                     ui.separator();
-
+                    
+                    ui.label("Persistant Memory: ");
                     let memory = ui.text_edit_multiline(&mut self.memory);
 
                     if ui.button("Apply").clicked() {
-                        // Here you would typically send the updated settings to the backend or apply them as needed
-                        println!("Settings applied: max={}, temp={}, topP={}, repPen={}", self.max, self.temp, self.topP, self.repPen); //this does fuck all ;p
+                        Self::sendMem(&self.memory);
                     }
 
             });
@@ -445,6 +445,19 @@ impl VinnyApp {
 
             if ui.button("Back to Menu").clicked() {
                 self.state = AppState::MainMenu;
+            }
+        });
+    }
+
+
+
+
+    fn sendMem(memory: &str) {
+        let memory = memory.to_string();
+        thread::spawn(move || {
+            if let Ok(mut stream) = std::net::TcpStream::connect("127.0.0.1:8087") {
+                use std::io::Write;
+                let _ = stream.write_all(memory.as_bytes());
             }
         });
     }

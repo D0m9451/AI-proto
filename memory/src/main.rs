@@ -69,7 +69,19 @@ fn core_loop(shared: Arc<Shared>) {
 
 
 
+fn longlisten(shared: Arc<Shared>) {
 
+    let listener = TcpListener::bind("127.0.0.1:8087").unwrap();
+
+    for stream in listener.incoming() {
+        let mut stream = stream.unwrap();
+        let mut buf = [0; 4096];
+        let n = stream.read(&mut buf).unwrap();
+
+        let longmem = String::from_utf8_lossy(&buf[..n]).trim().to_string();
+
+    }
+}
 
 
 fn guilisten(shared: Arc<Shared>) {
