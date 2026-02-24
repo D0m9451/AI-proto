@@ -358,7 +358,7 @@ impl VinnyApp {
                     ui.label("Persistant Memory: ");
                     let memory = ui.text_edit_multiline(&mut self.memory);
 
-                    if ui.button("Apply").clicked() {
+                    if ui.button("Update settings").clicked() {
                         Self::sendMem(&self.memory);
                     }
 
