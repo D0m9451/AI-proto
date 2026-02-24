@@ -4,6 +4,7 @@ use std::io::{Read, Write};
 use std::thread;
 
 struct ShortMem {
+    memory: Option<String>,
     model: Option<String>,
     user: Option<String>,
     updated: bool,
@@ -20,14 +21,25 @@ enum Source {
     User,
 }
 
-fn construct(mem: &ShortMem) -> String {
+fn construct(mem: &ShortMem, conversation: &mut String) -> String {
+    let memory = mem.memory.as_deref().unwrap_or("");
     let user = mem.user.as_deref().unwrap_or("");
     let model = mem.model.as_deref().unwrap_or("");
 
-    format!("Vinny: {}\n User: {}", model, user)
+    conversation.push_str(
+        &format!("Vinny: {}\nUser: {}\n", model, user)
+    );
+
+    format!("Persistent User data:\n {}\n 
+Rules:
+    - The persistant User data contains long-term information to help you respond better.\n
+    - Use it when relevant\n
+    - Do not mention it to the user unless asked\n
+Conversation:\n {}\n", memory, conversation)
+    
 }
 
-fn core_loop(shared: Arc<Shared>) {
+fn core_loop(shared: Arc<Shared>, conversation: &mut String) {
     let mut guard = shared.mem.lock().unwrap();
 
     loop {
@@ -36,18 +48,17 @@ fn core_loop(shared: Arc<Shared>) {
             guard = shared.condvar.wait(guard).unwrap();
         }
 
-        println!("{}", construct(&guard));
-
         match guard.last_source {
             Some(Source::User) => {
-                let prompt = construct(&guard);
+                let prompt = construct(&guard, conversation);
 
                 // consume the event
                 guard.updated = false;
 
                 // unlock BEFORE network I/O
                 drop(guard);
-
+                
+                println!("\n{}", prompt);
                 sendmodel(&prompt);
 
                 // re-lock and continue loop
@@ -55,9 +66,13 @@ fn core_loop(shared: Arc<Shared>) {
             }
 
             Some(Source::Model) => {
-                // model finished responding
+                /*if let (Some(user), Some(model)) = (&guard.user, &guard.model) {
+                    conversation.push_str(
+                        &format!("User: {}\nVinny: {}\n", user, model)
+                    );*/
+
                 guard.updated = false;
-                // DO NOT send anything back
+
             }
 
             None => {
@@ -80,6 +95,8 @@ fn longlisten(shared: Arc<Shared>) {
 
         let longmem = String::from_utf8_lossy(&buf[..n]).trim().to_string();
 
+            let mut mem = shared.mem.lock().unwrap();
+            mem.memory = Some(longmem);
     }
 }
 
@@ -151,8 +168,10 @@ fn sendmodel(prompt: &str) {
 
 
 fn short() {
+    let mut conversation = String::new();
     let shared = Arc::new(Shared {
         mem: Mutex::new(ShortMem {
+            memory: None,
             model: None,
             user: None,
             updated: false,
@@ -163,11 +182,13 @@ fn short() {
 
     let gui_shared = Arc::clone(&shared);
     let model_shared = Arc::clone(&shared);
-
+    let longmem_shared = Arc::clone(&shared);
+    
     thread::spawn(move || guilisten(gui_shared));
     thread::spawn(move || modellisten(model_shared));
+    thread::spawn(move || longlisten(longmem_shared));
 
-    core_loop(shared);
+    core_loop(shared, &mut conversation);
 
     
 

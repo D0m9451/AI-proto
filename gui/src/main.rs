@@ -316,6 +316,11 @@ impl VinnyApp {
                             self.send();
                         }
                     });
+                    
+                ui.separator();
+                if ui.button("Back to Menu").clicked() {
+                        self.state = AppState::MainMenu;
+                    }
                 });
     
 
@@ -357,12 +362,12 @@ impl VinnyApp {
                         Self::sendMem(&self.memory);
                     }
 
-            });
+                    //ui.add_space(325.0);
+                    if ui.button("Back to Menu").clicked() {
+                        self.state = AppState::MainMenu;
+                    }
 
-            ui.add_space(325.0);
-            if ui.button("Back to Menu").clicked() {
-                self.state = AppState::MainMenu;
-            }
+            });
         });
     }
 
