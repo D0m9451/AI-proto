@@ -108,8 +108,7 @@ fn main() {
     .current_dir(&current_dir)
     .spawn()
     .expect("Failed to launch memory.exe in new terminal");
-    
-    println!("memory.exe exited");
+
 
     let statusG = Command::new("cmd")
     .args(&["/C", "start cmd /K gui.exe"])
@@ -117,7 +116,6 @@ fn main() {
     .spawn()
     .expect("Failed to launch gui.exe in new terminal");
     
-    println!("gui.exe exited");
 
 
     // Run Vinny.py
