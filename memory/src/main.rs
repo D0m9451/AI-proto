@@ -66,10 +66,6 @@ fn core_loop(shared: Arc<Shared>, conversation: &mut String) {
             }
 
             Some(Source::Model) => {
-                /*if let (Some(user), Some(model)) = (&guard.user, &guard.model) {
-                    conversation.push_str(
-                        &format!("User: {}\nVinny: {}\n", user, model)
-                    );*/
 
                 guard.updated = false;
 
@@ -95,8 +91,8 @@ fn longlisten(shared: Arc<Shared>) {
 
         let longmem = String::from_utf8_lossy(&buf[..n]).trim().to_string();
 
-            let mut mem = shared.mem.lock().unwrap();
-            mem.memory = Some(longmem);
+        let mut mem = shared.mem.lock().unwrap();
+        mem.memory = Some(longmem);
     }
 }
 

@@ -59,6 +59,9 @@ fn find_system_python() -> &'static str {
 }
 
 fn main() {
+    let current_dir = env::current_dir().expect("Failed to get current directory");
+    println!("Current directory: {}", current_dir.display());
+
     let project_dir = find_pyai();
     println!("Using PyAI folder: {}", project_dir.display());
 
@@ -100,13 +103,30 @@ fn main() {
         }
     }
 
+    let statusM = Command::new("cmd")
+    .args(&["/C", "start cmd /K memory.exe"])
+    .current_dir(&current_dir)
+    .spawn()
+    .expect("Failed to launch memory.exe in new terminal");
+    
+    println!("memory.exe exited");
+
+    let statusG = Command::new("cmd")
+    .args(&["/C", "start cmd /K gui.exe"])
+    .current_dir(&current_dir)
+    .spawn()
+    .expect("Failed to launch gui.exe in new terminal");
+    
+    println!("gui.exe exited");
+
+
     // Run Vinny.py
     println!("Running Vinny.py...");
-    let status = Command::new(&python_path)
+    let statusV = Command::new(&python_path)
         .arg("Vinny.py")
         .current_dir(&project_dir)
         .status()
         .expect("Failed to run Vinny.py");
 
-    println!("Vinny.py exited with status: {}", status);
+    println!("Vinny.py exited with status: {}", statusV);
 }

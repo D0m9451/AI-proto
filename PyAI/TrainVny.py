@@ -1,4 +1,4 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, EarlyStoppingCallback
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 import torch
@@ -6,8 +6,8 @@ import os
 
 # === Config === #
 modelname = "./models/Qwen2.5-3B"
-datasetpath = r"C:\Users\Domin\Downloads\Programminn\repo\AI-proto\trainingData\vinnypersonality(10K).jsonl"
-datasetformat = "jsonl"  # csv, json, jsonl
+datasetpath = r"C:\Users\Domin\Downloads\Programminn\repo\AI-proto\trainingData\QAdataset44k.csv"
+datasetformat = "csv"  # csv, json, jsonl
 datasetcolumns = ["prompt", "completion"]  
 delimiter = ","  # for CSV only
 
@@ -69,14 +69,14 @@ training_args = TrainingArguments(
     logging_steps=5,
     learning_rate=learning_rate,
     fp16=False,
-    report_to="none"
+    report_to="none",                
 )
 
 # === Trainer Setup === #
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_dataset["train"]
+    train_dataset=tokenized_dataset["train"],
 )
 
 # === Check for Existing Checkpoint === #

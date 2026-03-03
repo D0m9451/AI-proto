@@ -67,8 +67,17 @@ def listen():
 
     while True:
         conn, addr = server.accept()
-        data = conn.recv(1024).decode('utf-8')
+        chunks = []
+        while True:
+            chunk = conn.recv(1024).decode('utf-8')
+            if not chunk:
+                break
+            chunks.append(chunk)
+
+        data = ''.join(chunks)
+      
         return data
+    
 
 
 
