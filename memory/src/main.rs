@@ -190,15 +190,6 @@ fn short() {
 
 }
 
-/*------------------------------------------------------------------------------------------------------------ */
-
-fn long() {
-    // Placeholder for a more complex implementation
-    println!("Long memory system is not implemented yet.");
-}
-
-
 fn main() {
     short();
-    //long();
 }
