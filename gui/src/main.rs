@@ -7,16 +7,14 @@ use std::io::Read;
 use std::thread;
 #[derive(PartialEq)]
 
-
-
-
-
 enum AppState {
-    MainMenu,
-    Chat,
-    Settings,
-    ModelInfo,
+    MainMenu, // Main menu screen
+    Chat, // Chat interface
+    Settings, // Settings screen
+    ModelInfo, // Model information screen
 }
+
+// Defined themes with custom colors
 enum Theme {
     Light,
     Dark,
@@ -29,6 +27,8 @@ enum Theme {
     Fire,
 
 }
+
+// Distinguishes who authored each bubble so the UI can label them appropriately
 enum ChatMsg {
     User(String),
     AI(String),
@@ -37,57 +37,57 @@ enum ChatMsg {
 
 
 struct VinnyApp {
-    state: AppState,
-    theme: Theme,
-    max: i32,
-    temp:f32,
-    topP: f32,
-    repPen: f32,
-    input: String,
-    receiver: Arc<Mutex<Vec<String>>>,
-    connect: Arc<Mutex<String>>,
-    listener: Option<std::thread::JoinHandle<()>>,
-    messages: Vec<ChatMsg>,
-    memory: String,
+    state: AppState, // Current screen state
+    theme: Theme, // Current theme
+    max: i32, // Max tokens
+    temp:f32, // Temperature
+    topP: f32, // Top P
+    repPen: f32, // Repetition penalty
+    input: String, // Contents of chat input box
+    receiver: Arc<Mutex<Vec<String>>>, // Token buffer shared with the listener thread
+    connect: Arc<Mutex<String>>, // Human-readable connection status string
+    listener: Option<std::thread::JoinHandle<()>>, // Handle for the listener thread
+    messages: Vec<ChatMsg>, // All chat messages in the current session
+    memory: String, // Contents of the persistent memory text box
 }
 
 impl Default for VinnyApp {
-    fn default() -> Self {
+    fn default() -> Self { // Shared state passed into the background listener thread.
         let receiver = Arc::new(Mutex::new(Vec::<String>::new()));
         let connect = Arc::new(Mutex::new(String::from("Ready")));
-        let text_clone = Arc::clone(&receiver);
+        let text_clone = Arc::clone(&receiver); // Clone the Arcs so both the main thread and the spawned thread can hold a reference to the same underlying data
         let status_clone = Arc::clone(&connect);
         
         
         let handle = thread::spawn(move || {
-            let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
-            println!("Listening on port 8080");
+            let listener = TcpListener::bind("127.0.0.1:8081").unwrap(); // Binds to port 8081 and waits for incoming token streams
+            println!("Listening on port 8081");
             
             for stream in listener.incoming() {
                 if let Ok(mut stream) = stream {
-                    *status_clone.lock().unwrap() = String::from("Receiving...");
+                    *status_clone.lock().unwrap() = String::from("Receiving..."); // Update connection status for the UI
                     
                     let mut buffer = [0; 1024];
                     let mut response = String::new();
 
-                    loop {
+                    loop { //Read all bytes untill connection is closed
                         match stream.read(&mut buffer) {
 
-                            Ok(0) => break,
+                            Ok(0) => break, //closed connection
                             Ok(n) => {
-                                response.push_str(&String::from_utf8_lossy(&buffer[..n]));
+                                response.push_str(&String::from_utf8_lossy(&buffer[..n])); // append response with the newly read chunk of data
                             }
-                            Err(_) => break,
+                            Err(_) => break, //error or closed connection
                         }
                     }
-                    if let Some(end) = response.find("<<END>>") {
+                    if let Some(end) = response.find("<<END>>") { //remove the end token if it exists
                         response.truncate(end);
                     }
 
                     let response = response.to_string();
                     
                     if !response.trim().is_empty() {
-                        text_clone.lock().unwrap().push(response);
+                        text_clone.lock().unwrap().push(response); // Append the fully received message to the shared buffer for the main thread to consume and display in the UI
                     }
 
                                         
@@ -96,7 +96,7 @@ impl Default for VinnyApp {
             }
         });
 
-        Self {
+        Self { // Initialize the app state with default values
             state: AppState::MainMenu,
             theme: Theme::Dark,
             max: 200,
@@ -116,7 +116,7 @@ impl Default for VinnyApp {
 impl App for VinnyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
 
-        match self.theme {
+        match self.theme { //All available themes. Light and dark are built in to eGUI
             Theme::Light => ctx.set_visuals(egui::Visuals::light()),
 
             Theme::Dark => ctx.set_visuals(egui::Visuals::dark()),
@@ -210,7 +210,7 @@ impl App for VinnyApp {
             }
         }
 
-        match self.state {
+        match self.state { // Render different UI based on the current app state
             AppState::MainMenu => self.show_main_menu(ctx),
             AppState::Chat => self.show_chat(ctx),
             AppState::Settings => self.show_settings(ctx),
@@ -221,11 +221,11 @@ impl App for VinnyApp {
 }
 
 impl VinnyApp {
-    fn show_main_menu(&mut self, ctx: &egui::Context) {
+    fn show_main_menu(&mut self, ctx: &egui::Context) { // vertically centered navigation buttons
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 ui.heading("Vinny the AI assistant");
-                ui.add_space(30.0); 
+                ui.add_space(30.0); //space between elements
 
                 if ui.button("💬 Start chat").clicked() {
                     self.state = AppState::Chat;
@@ -250,16 +250,16 @@ impl VinnyApp {
     }
 
 
-    fn show_chat(&mut self, ctx: &egui::Context) {
-        ctx.request_repaint();
+    fn show_chat(&mut self, ctx: &egui::Context) { 
+        ctx.request_repaint(); // Continuously re-render screen to update the chat with new messages as they arrive
         let new_messages = {
             let mut receiver = self.receiver.lock().unwrap();
-            receiver.drain(..).collect::<Vec<String>>()
+            receiver.drain(..).collect::<Vec<String>>() // Take all new messages from the shared buffer and clear it
         };
 
         for ai_msg in new_messages {
             if let Some(ChatMsg::AI(last_msg)) = self.messages.last_mut() {
-                last_msg.push_str(&ai_msg);
+                last_msg.push_str(&ai_msg); // If the last message in the chat is an AI message, append the new token to it
             }
             else {
                 self.messages.push(ChatMsg::AI(ai_msg));
@@ -271,7 +271,7 @@ impl VinnyApp {
             ui.heading("💬 Chat room");
             ui.label("Chat room: ");
 
-            egui::SidePanel::right("right_panel")
+            egui::SidePanel::right("right_panel") // Right panel for the chat interface, contains the scroll area for messages and the input box
                 .default_width(220.0)
                 .resizable(true)
                 .show(ctx, |ui| {
@@ -281,7 +281,7 @@ impl VinnyApp {
                     let messages_height = available_height - input_height;
 
                     
-                    egui::ScrollArea::vertical()
+                    egui::ScrollArea::vertical() // Scroll area for chat messages, set to stick to the bottom so it always shows the latest messages and doesn't require the user to manually scroll down
                         .stick_to_bottom(true)
                         .max_height(messages_height)
                         .show(ui, |ui| {
@@ -295,7 +295,7 @@ impl VinnyApp {
                                     }
                                     ChatMsg::AI(text) => {
                                         ui.group(|ui| {
-                                            ui.label(format!("Vinny: {}", text));
+                                            ui.label(format!("Vinny: {}", text)); // Label each message with the author for clarity
                                         });
                                     }
                                 }
@@ -306,7 +306,7 @@ impl VinnyApp {
 
                     
                     ui.horizontal(|ui| {
-                        let input = ui.text_edit_multiline(&mut self.input);
+                        let input = ui.text_edit_multiline(&mut self.input); // Multiline text edit for the user input, allows for pressing enter to create new lines without sending the message
 
                         if ui.button("Send ➡️").clicked() {
                             self.send();
@@ -333,30 +333,30 @@ impl VinnyApp {
                     ui.separator();
                     ui.label("Max Tokens: ");
                     ui.add(
-                        egui::Slider::new(&mut self.max, 10..=1000)
+                        egui::Slider::new(&mut self.max, 10..=1000) // Slider for max tokens, range from 10 to 1000
                     );
                     ui.separator();
 
                     ui.label("Temperature: ");
                     ui.add(
-                        egui::Slider::new(&mut self.temp, 0.0..=1.0)
+                        egui::Slider::new(&mut self.temp, 0.0..=1.0) // Slider for temperature, range from 0.0 to 1.0
                     );
                     ui.separator();
                     
                     ui.label("Top P: ");
                     ui.add(
-                        egui::Slider::new(&mut self.topP, 0.0..=10.0)
+                        egui::Slider::new(&mut self.topP, 0.0..=10.0) // Slider for top P, range from 0.0 to 10.0 (values above 1.0 are allowed but have diminishing effects on the output)
                     );
                     ui.separator();
 
                     ui.label("Repetition penalty: ");
                     ui.add(
-                        egui::Slider::new(&mut self.repPen, 0.0..=10.0)
+                        egui::Slider::new(&mut self.repPen, 0.0..=10.0) // Slider for repetition penalty, range from 0.0 to 10.0 (values above 1.0 penalize repeated tokens, values below 1.0 encourage repetition
                     );
                     ui.separator();
                     
                     ui.label("Persistant Memory: ");
-                    let memory = ui.text_edit_multiline(&mut self.memory);
+                    let memory = ui.text_edit_multiline(&mut self.memory); // Multiline text edit for the persistent memory
 
                     if ui.button("Update settings").clicked() {
                         Self::sendMem(&self.memory);
@@ -364,7 +364,7 @@ impl VinnyApp {
 
                     //ui.add_space(325.0);
                     if ui.button("Back to Menu").clicked() {
-                        self.state = AppState::MainMenu;
+                        self.state = AppState::MainMenu; //Back to menu button
                     }
 
             });
@@ -373,10 +373,10 @@ impl VinnyApp {
 
     fn show_settings(&mut self, ctx: &egui::Context) {
         let mut gpuq = false;
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |ui| { //Settings screen
             ui.heading("⚙ Settings");
 
-            ui.horizontal_wrapped(|ui| {
+            ui.horizontal_wrapped(|ui| { // Theme selection buttons
                 ui.heading("Theme: ");
                 if ui.button("Light").clicked() {
                     self.theme = Theme::Light;
@@ -419,7 +419,7 @@ impl VinnyApp {
             }
         });
     }
-    fn show_model_info(&mut self, ctx: &egui::Context) {
+    fn show_model_info(&mut self, ctx: &egui::Context) { //Model info screen
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("📝 Model Info");
             egui::ScrollArea::vertical()
@@ -446,7 +446,7 @@ impl VinnyApp {
                         Number of Attention Heads (GQA): 16 for Q and 2 for KV
                         Context Length: Full 32,768 tokens");
 
-                        });
+                        }); // Scroll area for the model information text
 
             if ui.button("Back to Menu").clicked() {
                 self.state = AppState::MainMenu;
@@ -464,7 +464,7 @@ impl VinnyApp {
                 use std::io::Write;
                 let _ = stream.write_all(memory.as_bytes());
             }
-        });
+        }); // Send the contents of the persistent memory text box to the memory on port 8087 when the "Update settings" button is clicked
     }
 
 
@@ -476,7 +476,7 @@ impl VinnyApp {
                 use std::io::Write;
                 let _ = stream.write_all(prompt.as_bytes());
             }
-        });
+        }); // Send the user input to the AI on port 9090 when the "Send" button is clicked or the user presses enter in the input box
     }
 
 
@@ -488,21 +488,21 @@ impl VinnyApp {
             Self::sendAI(&self.input);
 
             self.input.clear();
-        }
+        } 
     }
 
 }
 
 fn main() {
-    let native_options = NativeOptions::default();
+    let native_options = NativeOptions::default(); // Default options for the eframe window, can be customized if desired (e.g. initial size, resizability, etc.)
     eframe::run_native(
         "Vinny",
         native_options,
         
         Box::new(|cc|{
-            cc.egui_ctx.set_visuals(egui::Visuals::dark());
+            cc.egui_ctx.set_visuals(egui::Visuals::dark()); // Set default theme to dark
 
-            Ok(Box::new(VinnyApp::default()))
+            Ok(Box::new(VinnyApp::default())) //Render new instance of app with default state
         }),
     ).unwrap();
 }

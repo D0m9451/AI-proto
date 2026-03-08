@@ -60,11 +60,11 @@ fn find_system_python() -> &'static str {
 
 fn main() {
     let current_dir = env::current_dir().expect("Failed to get current directory");
-    println!("Current directory: {}", current_dir.display());
+    println!("Current directory: {}", current_dir.display()); // print the current directory for debugging purposes
 
     let project_dir = find_pyai();
-    println!("Using PyAI folder: {}", project_dir.display());
-
+    println!("Using PyAI folder: {}", project_dir.display()); // print the located PyAI folder for debugging purposes
+    
     // Set venv path
     let venv_path = project_dir.join("venv");
 
@@ -107,14 +107,14 @@ fn main() {
     .args(&["/C", "start cmd /K memory.exe"])
     .current_dir(&current_dir)
     .spawn()
-    .expect("Failed to launch memory.exe in new terminal");
+    .expect("Failed to launch memory.exe in new terminal"); // launch memory.exe in a new terminal window
 
 
     let statusG = Command::new("cmd")
     .args(&["/C", "start cmd /K gui.exe"])
     .current_dir(&current_dir)
     .spawn()
-    .expect("Failed to launch gui.exe in new terminal");
+    .expect("Failed to launch gui.exe in new terminal"); // launch gui.exe in a new terminal window
     
 
 
@@ -124,7 +124,7 @@ fn main() {
         .arg("Vinny.py")
         .current_dir(&project_dir)
         .status()
-        .expect("Failed to run Vinny.py");
+        .expect("Failed to run Vinny.py"); // run Vinny.py using the Python interpreter from the virtual environment
 
-    println!("Vinny.py exited with status: {}", statusV);
+    println!("Vinny.py exited with status: {}", statusV); // print the exit status of Vinny.py for debugging purposes
 }
